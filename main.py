@@ -1,60 +1,75 @@
 import pandas as pd
-import nltk
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-
-# Ensure nltk resources are downloaded
-nltk.download('punkt')
-nltk.download('stopwords')
-
 
 def load_data(filepath):
-    """ Load the recipe data from a CSV file. """
+    """Load the food dataset from a CSV file."""
     return pd.read_csv(filepath)
 
+def search_food(data, search_query):
+    """Search for food items matching the search query."""
+    data['Description_lower'] = data['Description'].str.lower()
+    search_query_lower = search_query.lower()
+    return data[data['Description_lower'].str.contains(search_query_lower)]
 
-def process_input(user_input):
-    """ Process user input to extract relevant keywords. """
-    stop_words = set(stopwords.words('english'))
-    words = word_tokenize(user_input)
-    filtered_words = [word.lower() for word in words if word.isalnum() and word.lower() not in stop_words]
-    return filtered_words
+def analyze_nutrition(data, food_id, targets):
+    """Analyze the nutritional content and provide recommendations."""
+    food_nutrition = data.loc[food_id]
+    analysis = {}
+    recommendations = []
+    
+    for nutrient, value in targets.items():
+        actual_value = food_nutrition.get(nutrient, 0)
+        analysis[nutrient] = actual_value
+        if actual_value < value:
+            recommendations.append(f"Increase {nutrient}")
+        elif actual_value > value:
+            recommendations.append(f"Decrease {nutrient}")
+    
+    return {
+        "Analysis": analysis,
+        "Recommendations": recommendations
+    }
 
+def display_options(data, search_query):
+    """Display 10 food options based on the search query."""
+    matches = search_food(data, search_query)
+    
+    if not matches.empty:
+        print(f"\nFood options containing '{search_query}':")
+        options = matches['Description'].sample(10).reset_index(drop=True)
+        for index, option in options.items():
+            print(f"{index + 1}. {option}")
+        
+        choice = input("Enter the number of your choice (or 'R' to refresh for different choice): ")
+        
+        if choice.isdigit() and int(choice) > 0 and int(choice) <= len(options):
+            selected_food = matches[matches['Description'] == options[int(choice) - 1]].iloc[0]
+            return selected_food.name
+        elif choice.lower() == 'r':
+            return display_options(data, search_query)
+    else:
+        print("No matching food found. Please try a different search.")
+        return None
 
-def search_recipes(keywords, data):
-    """ Search for recipes that match the keywords. """
+# Load and prepare data
+data = load_data('food.csv')
+# Get user input for keyword search
+search_query = input("Enter a keyword to search for your deit food plan: ")
 
-    # Filter function to match keywords with multiple columns
-    def match_keywords(row):
-        text = f"{row['Recipe_name']} {row['Diet_type']} {row['Cuisine_type']}".lower()
-        return any(keyword in text for keyword in keywords)
+# Display options and handle user input
+selected_food_id = display_options(data, search_query)
 
-    matched_recipes = data[data.apply(match_keywords, axis=1)]
-    return matched_recipes
-
-
-def main():
-    # Load the data
-    filepath = 'CSV\\All_Diets.csv'  # Update the path to your CSV file
-    data = load_data(filepath)
-
-    while True:
-        # User input
-        user_input = input("Enter keywords for recipe search or type 'Exit now' to quit: ")
-        if user_input.lower() == "exit now":
-            break
-        keywords = process_input(user_input)
-
-        # Search recipes
-        matched_recipes = search_recipes(keywords, data)
-
-        # Display results
-        if not matched_recipes.empty:
-            print("Found Recipes:")
-            print(matched_recipes[['Recipe_name', 'Diet_type', 'Cuisine_type', 'Protein(g)', 'Carbs(g)', 'Fat(g)']])
-        else:
-            print("No recipes found matching your criteria.")
-
-
-if __name__ == '__main__':
-    main()
+if selected_food_id is not None:
+    nutritional_targets = {
+        'Data.Carbohydrate': 300,
+        'Data.Fiber': 30,
+        'Data.Protein': 50,
+        'Data.Cholesterol': 300
+    }
+    analysis_results = analyze_nutrition(data, selected_food_id, nutritional_targets)
+    print("\nNutritional Analysis:")
+    for nutrient in ['Data.Carbohydrate', 'Data.Fiber', 'Data.Protein', 'Data.Cholesterol']:
+        value = analysis_results['Analysis'].get(nutrient, 0)
+        print(f"{nutrient} (Target: {nutritional_targets[nutrient]} grams): {value}")
+    print("\nDietary Recommendations:")
+    for recommendation in analysis_results['Recommendations']:
+        print(recommendation)
