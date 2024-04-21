@@ -33,6 +33,20 @@ def analyze_nutrition(data, food_id, targets):
     return analysis
 
 
+def get_user_choice(sample_size):
+    """Prompt user for their choice and handle the response."""
+    while True:
+        choice = input("Enter the number of your choice (or 'R' to refresh, 'Q' to quit): ")
+        if choice.isdigit() and 0 < int(choice) <= sample_size:
+            return int(choice)
+        elif choice.lower() == 'r':
+            return 'refresh'
+        elif choice.lower() == 'q':
+            return 'quit'
+        else:
+            print("Invalid input, please try again.")
+
+
 def display_options(data, search_query, vectorizer, tfidf_matrix):
     """Display food options based on the search query using TF-IDF."""
     matches = search_food(data, search_query, vectorizer, tfidf_matrix)
@@ -42,22 +56,17 @@ def display_options(data, search_query, vectorizer, tfidf_matrix):
         print(f"\nFood options containing '{search_query}':")
         for index, option in options.items():
             print(f"{index + 1}. {option}")
-        while True:
-            choice = input("Enter the number of your choice (or 'R' to refresh, 'Q' to quit): ")
-            if choice.isdigit() and 0 < int(choice) <= sample_size:
-                selected_description = options[int(choice) - 1]
-                selected_food = matches[matches['Description'] == selected_description].iloc[0]
-                return selected_food
-            elif choice.lower() == 'r':
-                return display_options(data, search_query, vectorizer, tfidf_matrix)
-            elif choice.lower() == 'q':
-                print("Exiting selection.")
-                return None
-            else:
-                print("Invalid input, please try again.")
+        choice = get_user_choice(sample_size)
+        if isinstance(choice, int):
+            selected_description = options[choice - 1]
+            return matches[matches['Description'] == selected_description].iloc[0]
+        elif choice == 'refresh':
+            return display_options(data, search_query, vectorizer, tfidf_matrix)
+        elif choice == 'quit':
+            print("Exiting selection.")
     else:
         print("No matching food found.")
-        return None
+    return None
 
 
 def print_top_terms(vectorizer, tfidf_matrix, top_n=10):
