@@ -1,22 +1,45 @@
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
+import nltk
+from nltk.stem import WordNetLemmatizer
+from nltk.corpus import stopwords
+import string
 
+# Download necessary NLTK resources
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('wordnet')
+
+def preprocess_text(text):
+    """Preprocess text by removing punctuation, stopwords, and applying lemmatization."""
+    stop_words = set(stopwords.words('english'))
+    lemmatizer = WordNetLemmatizer()
+
+    # Lowercase, remove punctuation, and split into words
+    words = [word.lower() for word in nltk.word_tokenize(text) if word not in string.punctuation]
+
+    # Remove stopwords and apply lemmatization
+    lemmatized_words = [lemmatizer.lemmatize(word) for word in words if word not in stop_words]
+
+    return ' '.join(lemmatized_words)
 
 def load_data(filepath):
-    """Load the food dataset from a CSV file."""
-    return pd.read_csv(filepath)
+    """Load the food dataset from a CSV file and preprocess text."""
+    data = pd.read_csv(filepath)
+    data['Keywords'] = data['Description'].apply(preprocess_text)
+    return data
 
 
 def get_tfidf(data):
-    """Generate a TF-IDF matrix for the descriptions."""
+    """Generate a TF-IDF matrix for the preprocessed keywords."""
     vectorizer = TfidfVectorizer(stop_words='english')
-    tfidf_matrix = vectorizer.fit_transform(data['Description'])
+    tfidf_matrix = vectorizer.fit_transform(data['Keywords'])
     return vectorizer, tfidf_matrix
 
 
 def search_food(data, search_query, vectorizer, tfidf_matrix):
     """Search for food items matching the search query using TF-IDF vectorization."""
-    query_tfidf = vectorizer.transform([search_query])
+    query_tfidf = vectorizer.transform([preprocess_text(search_query)])
     cosine_similarities = (tfidf_matrix * query_tfidf.T).toarray().flatten()
     relevant_indices = cosine_similarities.argsort()[-10:][::-1]
     return data.iloc[relevant_indices]
@@ -25,22 +48,20 @@ def search_food(data, search_query, vectorizer, tfidf_matrix):
 def analyze_nutrition(data, food_id, targets):
     """Analyze the nutritional content and provide recommendations."""
     food_nutrition = data.loc[food_id]
-    analysis = {}
-    recommendations = []
-    for nutrient, value in targets.items():
-        actual_value = food_nutrition.get(nutrient, 0)
-        analysis[nutrient] = actual_value
+    analysis = {nutrient: food_nutrition.get(nutrient, 0) for nutrient in targets}
     return analysis
 
 
 def get_user_choice(sample_size):
     """Prompt user for their choice and handle the response."""
     while True:
-        choice = input("Enter the number of your choice (or 'R' to refresh, 'Q' to quit): ")
+        choice = input("Enter the number of your choice, 'R' to refresh, 'N' for a new search, or 'Q' to quit: ")
         if choice.isdigit() and 0 < int(choice) <= sample_size:
             return int(choice)
         elif choice.lower() == 'r':
             return 'refresh'
+        elif choice.lower() == 'n':
+            return 'new_search'
         elif choice.lower() == 'q':
             return 'quit'
         else:
@@ -59,14 +80,17 @@ def display_options(data, search_query, vectorizer, tfidf_matrix):
         choice = get_user_choice(sample_size)
         if isinstance(choice, int):
             selected_description = options[choice - 1]
-            return matches[matches['Description'] == selected_description].iloc[0]
+            return 'selected', matches[matches['Description'] == selected_description].iloc[0]
         elif choice == 'refresh':
-            return display_options(data, search_query, vectorizer, tfidf_matrix)
+            return 'refresh', display_options(data, search_query, vectorizer, tfidf_matrix)
+        elif choice == 'new_search':
+            return 'new_search', None
         elif choice == 'quit':
             print("Exiting selection.")
+            return 'quit', None
     else:
         print("No matching food found.")
-    return None
+    return None, None
 
 
 def print_top_terms(vectorizer, tfidf_matrix, top_n=10):
@@ -105,18 +129,24 @@ def main():
         if search_query.lower() == 'exit':
             print("Exiting the program.")
             break
-        selected_food = display_options(data, search_query, vectorizer, tfidf_matrix)
-        if selected_food is not None:
-            nutrition_info = analyze_nutrition(data, selected_food.name, nutritional_targets)
-            for nutrient, value in nutrition_info.items():
-                cumulative_nutrition[nutrient] += value
-            print("\nCumulative Nutritional Intake:")
-            for nutrient, value in cumulative_nutrition.items():
-                print(f"{nutrient}: {value} grams (Target: {nutritional_targets[nutrient]} grams)")
-                if value < nutritional_targets[nutrient]:
-                    print(f"Consider increasing your intake of {nutrient.split('.')[-1]}\n")
-                elif value > nutritional_targets[nutrient]:
-                    print(f"Consider decreasing your intake of {nutrient.split('.')[-1]}\n")
+        while True:
+            action, selected_food = display_options(data, search_query, vectorizer, tfidf_matrix)
+            if action == 'selected' and selected_food is not None:
+                if selected_food is not None:
+                    nutrition_info = analyze_nutrition(data, selected_food.name, nutritional_targets)
+                    for nutrient, value in nutrition_info.items():
+                        cumulative_nutrition[nutrient] += value
+                    print("\nCumulative Nutritional Intake:")
+                    for nutrient, value in cumulative_nutrition.items():
+                        print(f"{nutrient}: {value} grams (Target: {nutritional_targets[nutrient]} grams)")
+                        if value < nutritional_targets[nutrient]:
+                            print(f"Consider increasing your intake of {nutrient.split('.')[-1]}\n")
+                        elif value > nutritional_targets[nutrient]:
+                            print(f"Consider decreasing your intake of {nutrient.split('.')[-1]}\n")
+            elif action == 'new_search':
+                break  # Breaks inner loop, returns to search query input
+            elif action == 'quit':
+                return  # Exits the program
 
 
 if __name__ == "__main__":
