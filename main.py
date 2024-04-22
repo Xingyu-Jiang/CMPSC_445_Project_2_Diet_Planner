@@ -55,13 +55,15 @@ def analyze_nutrition(data, food_id, targets):
 def get_user_choice(sample_size):
     """Prompt user for their choice and handle the response."""
     while True:
-        choice = input("Enter the number of your choice, 'R' to refresh, 'N' for a new search, or 'Q' to quit: ")
+        choice = input("Enter the number of your choice, 'R' to refresh, 'N' for a new search or 'Q' to quit: ")
         if choice.isdigit() and 0 < int(choice) <= sample_size:
             return int(choice)
         elif choice.lower() == 'r':
             return 'refresh'
         elif choice.lower() == 'n':
             return 'new_search'
+        # elif choice.lower() == 'c':
+        #     return 'calculate'
         elif choice.lower() == 'q':
             return 'quit'
         else:
@@ -85,6 +87,8 @@ def display_options(data, search_query, vectorizer, tfidf_matrix):
             return 'refresh', display_options(data, search_query, vectorizer, tfidf_matrix)
         elif choice == 'new_search':
             return 'new_search', None
+        # elif choice == 'calculate':
+        #     return 'calculate', None
         elif choice == 'quit':
             print("Exiting selection.")
             return 'quit', None
@@ -125,28 +129,40 @@ def main():
         'Data.Cholesterol': 300
     }
     while True:
-        search_query = input("\nEnter a keyword to search for your diet food plan (or type 'exit' to quit): ")
+        search_query = input("Enter what would you like to eat here (type 'exit' to quit and 'calculate' for total "
+                             "nutrient value): ")
         if search_query.lower() == 'exit':
             print("Exiting the program.")
             break
-        while True:
-            action, selected_food = display_options(data, search_query, vectorizer, tfidf_matrix)
-            if action == 'selected' and selected_food is not None:
-                if selected_food is not None:
+        elif search_query.lower() == 'calculate':
+            print("\nCumulative Nutritional Intake:")
+            for nutrient, value in cumulative_nutrition.items():
+                print(f"{nutrient}: {value} grams (Target: {nutritional_targets[nutrient]} grams)")
+                if value < nutritional_targets[nutrient]:
+                    print(f"Consider increasing your intake of {nutrient.split('.')[-1]}\n")
+                elif value > nutritional_targets[nutrient]:
+                    print(f"Consider decreasing your intake of {nutrient.split('.')[-1]}\n")
+        else:
+            while True:
+                action, selected_food = display_options(data, search_query, vectorizer, tfidf_matrix)
+                if action == 'selected' and selected_food is not None:
                     nutrition_info = analyze_nutrition(data, selected_food.name, nutritional_targets)
                     for nutrient, value in nutrition_info.items():
                         cumulative_nutrition[nutrient] += value
-                    print("\nCumulative Nutritional Intake:")
-                    for nutrient, value in cumulative_nutrition.items():
-                        print(f"{nutrient}: {value} grams (Target: {nutritional_targets[nutrient]} grams)")
-                        if value < nutritional_targets[nutrient]:
-                            print(f"Consider increasing your intake of {nutrient.split('.')[-1]}\n")
-                        elif value > nutritional_targets[nutrient]:
-                            print(f"Consider decreasing your intake of {nutrient.split('.')[-1]}\n")
-            elif action == 'new_search':
-                break  # Breaks inner loop, returns to search query input
-            elif action == 'quit':
-                return  # Exits the program
+                    break
+                # elif action == 'calculate':
+                #     print("\nCumulative Nutritional Intake:")
+                #     for nutrient, value in cumulative_nutrition.items():
+                #         print(f"{nutrient}: {value} grams (Target: {nutritional_targets[nutrient]} grams)")
+                #         if value < nutritional_targets[nutrient]:
+                #             print(f"Consider increasing your intake of {nutrient.split('.')[-1]}\n")
+                #         elif value > nutritional_targets[nutrient]:
+                #             print(f"Consider decreasing your intake of {nutrient.split('.')[-1]}\n")
+                #     break
+                elif action == 'new_search':
+                    break  # Breaks inner loop, returns to search query input
+                elif action == 'quit':
+                    return  # Exits the program
 
 
 if __name__ == "__main__":
