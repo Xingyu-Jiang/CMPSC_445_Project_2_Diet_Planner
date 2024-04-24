@@ -19,13 +19,18 @@ The program uses simple text analysis to match food items with a comprehensive n
 - Clone the repository or download the ZIP file.
   Command:
   ```bash
-  Git clone 
+  Git clone https://github.com/Xingyu-Jiang/CMPSC_445_Project_2_Diet_Planner
   ```
 - Install required Python libraries using: `pip install pandas scikit-learn nltk`.
   Command:
   ```bash
-pip install pandas scikit-learn nltk
-```
+  pip install pandas scikit-learn nltk
+  ```
+- Run the program
+  Command：
+  ```bash
+  .\main.py
+  ```
 
 ### Usage Instructions:
 
