@@ -129,12 +129,14 @@ def main():
         'Data.Cholesterol': 300
     }
     while True:
-        search_query = input("Enter what would you like to eat here (type 'exit' to quit and 'calculate' for total "
+        print()
+        print()
+        search_query = input("Enter what would you like to eat and drink here (type 'Q' to quit and 'C' to analysis nutrition "
                              "nutrient value): ")
-        if search_query.lower() == 'exit':
+        if search_query.lower() == 'q':
             print("Exiting the program.")
             break
-        elif search_query.lower() == 'calculate':
+        elif search_query.lower() == 'c':
             print("\nCumulative Nutritional Intake:")
             for nutrient, value in cumulative_nutrition.items():
                 print(f"{nutrient}: {value} grams (Target: {nutritional_targets[nutrient]} grams)")
