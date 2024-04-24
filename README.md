@@ -38,7 +38,7 @@ The program uses simple text analysis to match food items with a comprehensive n
 - Follow on-screen prompts to enter search queries or analyze nutritional content.
 
 ## Structure of the Code
-![image](https://github.com/Xingyu-Jiang/CMPSC_445_Project_2_Diet_Planner/assets/117769320/51d97d28-0a90-4404-b2cd-362a58beaad0)
+![Untitled Diagram drawio (1)](https://github.com/Xingyu-Jiang/CMPSC_445_Project_2_Diet_Planner/assets/117769320/3a4429c3-17bc-471f-b7b7-b450128f461a)
 
 The application is organized into several key functions, each handling specific aspects:
 
