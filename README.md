@@ -13,7 +13,7 @@ The program uses simple text analysis to match food items with a comprehensive n
 ### Prerequisites:
 - Python 3.10 or above
 - Libraries: pandas, scikit-learn, nltk
-- 
+  
 ### Installation:
 
 - Clone the repository or download the ZIP file.
