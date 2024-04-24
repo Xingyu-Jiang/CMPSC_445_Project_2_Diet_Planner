@@ -40,7 +40,7 @@ The program uses simple text analysis to match food items with a comprehensive n
 ## Structure of the Code
 
 <div align="center">
-    <img src="https://github.com/Xingyu-Jiang/CMPSC_445_Project_2_Diet_Planner/assets/117769320/3a4429c3-17bc-471f-b7b7-b450128f461a" alt="Description of image">
+    <img src="https://github.com/Xingyu-Jiang/CMPSC_445_Project_2_Diet_Planner/assets/117769320/2e52e14d-9648-4a62-8822-34a36f254765" alt="Description of image">
 </div>
 
 
