@@ -68,6 +68,6 @@ The application is organized into several key functions, each handling specific 
 
 ## Discussion and Conclusions
 
-The project effectively combines natural language processing with nutritional data analysis, creating a user-friendly tool for diet management. However, there are still certain challenges that have not been addressed yet. Notably, the system’s performance heavily depends on the accuracy of the input data, and the program’s reliability across more diverse food items.
+The project successfully integrates natural language processing with nutritional data analysis to develop a user-friendly diet management tool. By utilizing techniques such as term frequency-inverse document frequency and lemmatization, the system has enhanced its ability to understand and accurately respond to user queries. However, challenges remain, particularly in terms of the dependency on the accuracy of input data and the system's consistency when dealing with a diverse range of food items. We see current version of the project as a base and more features and improvements can be made to have a robust application.
 
 ---
